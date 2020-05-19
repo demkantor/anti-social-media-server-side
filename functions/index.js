@@ -3,6 +3,7 @@ const admin = require('firebase-admin');
 const app = require('express')();
 admin.initializeApp();
 
+// config for db - 
 const firebaseConfig = {
     apiKey: "AIzaSyCvZVaVIU2j3iLYIkM2MdPt1xPuh-cWAJk",
     authDomain: "anti-social-media-7c6ba.firebaseapp.com",
@@ -18,6 +19,7 @@ firebase.initializeApp(firebaseConfig);
 
 const db = admin.firestore();
 
+// gets all the posts (disregards) from db
 app.get('/disregard', (req, res) => {
     db
     .collection('disregards')
@@ -35,13 +37,46 @@ app.get('/disregard', (req, res) => {
         return res.json(disregards);
     })
     .catch(err => console.error(err));
-})
+});
 
+// middleware
+const FBAuth = (req, res, next) => {
+    let idToken
+    if(req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+        idToken = req.headers.authorization.split('Bearer ')[1];
+    } else {
+        console.error('No token found');
+        return res.status(403).json({ error: 'Unauthorized'});
+    }
 
-app.post('/disregard', (req, res) => {
+    admin.auth().verifyIdToken(idToken)
+        .then((decodedToken) => {
+            req.user = decodedToken;
+            console.log(decodedToken);
+            return db.collection('users')
+                .where('userId', '==', req.user.uid)
+                .limit(1)
+                .get();
+        })
+        .then((data) => {
+            req.user.handle = data.docs[0].data().handle;
+            return next();
+        })
+        .catch((err) => {
+            console.error(err, 'Error while verifying token');
+            res.status(403).json(err);
+        })
+
+}
+
+// route to add a new post... aka disregard
+app.post('/disregard', FBAuth, (req, res) => {
+    if(req.body.body.trim() === '') {
+        return res.status(400).json({ body: 'Disregard body must not be empty!'})
+    }
     const newDisregard = {
         body: req.body.body,
-        userHandle: req.body.userHandle,
+        userHandle: req.user.handle,
         createdAt: new Date().toISOString()
     };
     db
@@ -57,6 +92,7 @@ app.post('/disregard', (req, res) => {
         })
 });
 
+// helper functions to test for validation
 const isEmpty = (string) => {
     if(string.trim() === '') return true;
     else return false;
@@ -68,7 +104,7 @@ const isEmail = (email) => {
     else return false;
   };
 
-// signup route 
+// signup route - with confirmation of valid email, pasword match
 app.post('/signup', (req, res) => {
     const newUser = {
         email: req.body.email,
@@ -130,6 +166,8 @@ app.post('/signup', (req, res) => {
     });
 });
 
+
+// logs in a user, validation for email and password fields before sending to firebase for more auth
 app.post('/login', (req, res) => {
     const user = {
         email: req.body.email,
