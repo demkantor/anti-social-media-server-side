@@ -2,8 +2,8 @@ const functions = require('firebase-functions');
 
 const app = require('express')();
 const FBAuth = require('./util/fbAuth');
-const { getAllDisregards, postNewDisregard } = require('./handlers/disregards');
-const { signup, login } = require('./handlers/users');
+const { getAllDisregards, postNewDisregard } = require('./routes/disregards');
+const { signup, login } = require('./routes/users');
 
 
 // disregard routes //

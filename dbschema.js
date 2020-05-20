@@ -1,3 +1,5 @@
+// just an example schema
+
 let db = {
     disregards: [
         {
@@ -8,4 +10,4 @@ let db = {
             commentCount: 2
         }
     ]
-}
+};

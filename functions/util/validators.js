@@ -1,4 +1,3 @@
-
 // helper functions to test for validation
 const isEmpty = (string) => {
     if(string.trim() === '') return true;
@@ -10,6 +9,7 @@ const isEmail = (email) => {
     if (email.match(regEx)) return true;
     else return false;
 };
+
 
 // validate signup form
 exports.validateSignupData = (data) => {
@@ -31,11 +31,12 @@ exports.validateSignupData = (data) => {
     }
 };
 
+// validate login form
 exports.validateLoginData = (data) => { 
     let errors = {};
 
-    if(isEmpty(user.email)) { errors.email = 'Must not be empty!' }
-    if(isEmpty(user.password)) { errors.password = 'Must not be empty!' }
+    if(isEmpty(data.email)) { errors.email = 'Must not be empty!' }
+    if(isEmpty(data.password)) { errors.password = 'Must not be empty!' }
 
     return {
         errors,
