@@ -2,7 +2,15 @@ const functions = require('firebase-functions');
 
 const app = require('express')();
 const FBAuth = require('./util/fbAuth');
-const { getAllDisregards, postNewDisregard, getDisregard, commentOnDisregard } = require('./routes/disregards');
+const { 
+    getAllDisregards, 
+    postNewDisregard, 
+    getDisregard, 
+    commentOnDisregard,
+    respectDisregard,
+    disrespectDisregard,
+    deleteDisregard
+} = require('./routes/disregards');
 const { signup, login, uploadImage, addUserDetails, getAuthenticatedUser } = require('./routes/users');
 
 
@@ -14,8 +22,14 @@ app.get('/disregards', getAllDisregards);
 app.post('/disregards', FBAuth, postNewDisregard);
 // route to get a single post
 app.get('/disregards/:disregardId', getDisregard);
+// route to delete a disregard
+app.delete('/disregards/:disregardId', FBAuth, deleteDisregard);
 // comment on a disregard post
 app.post('/disregards/:disregardId/comment', FBAuth, commentOnDisregard);
+// respect a disregard
+app.get('/disregards/:disregardId/respect', FBAuth, respectDisregard);
+// disrespect a disregard
+app.get('/disregards/:disregardId/disrespect', FBAuth, disrespectDisregard);
 
 
 // user routes //

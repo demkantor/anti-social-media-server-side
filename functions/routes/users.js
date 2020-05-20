@@ -65,6 +65,7 @@ exports.signup = (req, res) => {
     return null;
 };
 
+
 // logs in a user, validation for email and password fields before sending to firebase for more auth
 exports.login = (req, res) => {
     const user = {
@@ -95,6 +96,7 @@ exports.login = (req, res) => {
     return null;
 };
 
+
 // allows user to add bio details
 exports.addUserDetails = (req, res) => {
     let userDetails = reduceUserDetails(req.body);
@@ -108,6 +110,7 @@ exports.addUserDetails = (req, res) => {
             return res.status(500).json({ error: err.code });
         });
 };
+
 
 // get logged in users details
 exports.getAuthenticatedUser = (req, res) => {
@@ -132,6 +135,7 @@ exports.getAuthenticatedUser = (req, res) => {
         return res.status(500).json({ error: err.code });
     });
 };
+
 
 // allows user to upload a profile picture
 exports.uploadImage = (req, res) => {

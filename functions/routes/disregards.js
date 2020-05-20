@@ -20,6 +20,7 @@ exports.getAllDisregards = (req, res) => {
     .catch(err => console.error(err));
 };
 
+
 // route to add a new post... aka disregard
 exports.postNewDisregard = (req, res) => {
     if(req.body.body.trim() === '') {
@@ -28,13 +29,18 @@ exports.postNewDisregard = (req, res) => {
     const newDisregard = {
         body: req.body.body,
         userHandle: req.user.handle,
-        createdAt: new Date().toISOString()
+        userImage: req.user.imageUrl,
+        createdAt: new Date().toISOString(),
+        respectCount: 0,
+        commentCount: 0
     };
     db.collection('disregards')
         // .orderBy("createdAt", "desc")
         .add(newDisregard)
         .then((doc) => {
-            return res.json({ message: `document ${doc.id} created succesfully!` });
+            const resDisregard = newDisregard;
+            resDisregard.disregardId = doc.id;
+            return res.json(resDisregard);
         })
         .catch((err) => {
             console.log(err);
@@ -43,6 +49,7 @@ exports.postNewDisregard = (req, res) => {
     }
     return null;
 };
+
 
 // route to get a single disregard
 exports.getDisregard = (req, res) => {
@@ -74,6 +81,7 @@ exports.getDisregard = (req, res) => {
         });
 };
 
+
 // comment on a disregard post
 exports.commentOnDisregard = (req, res) => {
     if(req.body.body.trim() === '') 
@@ -93,6 +101,9 @@ exports.commentOnDisregard = (req, res) => {
             if(!doc.exists){
                 return res.status(404).json({ error: 'Disregard not found!' });
             }
+            return doc.ref.update({ commentCount: doc.data().commentCount + 1 });
+        })
+        .then(() => {
             return db.collection('comments').add(newComment);
         })
         .then(() => {
@@ -103,4 +114,113 @@ exports.commentOnDisregard = (req, res) => {
             return res.status(500).json({ error: 'Uh oh... Something went wrong' });
         });
     return null;
+};
+
+
+// respect a disregard
+exports.respectDisregard = (req, res) => {
+    const respectDocument = 
+        db.collection('respects')
+        .where('userHandle', '==', req.user.handle)
+        .where('disregardId', '==', req.params.disregardId)
+        .limit(1);
+    const disregardDocument = db.doc(`/disregards/${req.params.disregardId}`);
+    let diregardData = {};
+
+    disregardDocument.get()
+        .then((doc) => {
+            if(doc.exists){
+                disregardData = doc.data();
+                disregardData.disregardId = doc.id;
+                return respectDocument.get();
+            } else {
+                return res.status(404).json({ error: 'Disregard not found!' });
+            }
+        })
+        .then((data) => {
+            if (data.empty) {
+                return db.collection('respects')
+                .add({
+                    disregardId : req.params.disregardId,
+                    userHandle: req.user.handle
+                })
+                .then(() => {
+                    disregardData.respectCount++
+                    return disregardDocument.update({ respectCount: disregardData.respectCount });
+                })
+                .then(() => {
+                    return res.json(disregardData);
+                })
+            } else {
+                return res.status(400).json({ error: 'Disregard already respected!' });
+            }
+        })
+        .catch((err) => {
+            console.log(err);
+            return res.status(500).json({ error: err.code });
+        });
+}
+
+
+// disrespect a disregard
+exports.disrespectDisregard = (req, res) => {
+    const respectDocument = 
+        db.collection('respects').where('userHandle', '==', req.user.handle)
+        .where('disregardId', '==', req.params.disregardId)
+        .limit(1);
+    const disregardDocument = db.doc(`/disregards/${req.params.disregardId}`);
+    let diregardData = {};
+
+    disregardDocument.get()
+        .then((doc) => {
+            if(doc.exists){
+                disregardData = doc.data();
+                disregardData.disregardId = doc.id;
+                return respectDocument.get();
+            } else {
+                return res.status(404).json({ error: 'Disregard not found!' });
+            }
+        })
+        .then((data) => {
+            if(data.empty){
+                return res.status(400).json({ error: 'Disregard not respected!' });
+            } else {
+                return db.doc(`/respects/${data.docs[0].id}`).delete()
+                    .then(() => {
+                        disregardData.respectCount--;
+                        return disregardDocument.update({ respectCount: disregardData.respectCount });
+                    })
+                    .then(() => {
+                        return res.json(disregardData);
+                    })
+            }
+        })
+        .catch((err) => {
+            console.log(err);
+            return res.status(500).json({ error: err.code });
+        });
+};
+
+
+// delete a disregard 
+exports.deleteDisregard = (req, res) => {
+    const document = db.doc(`/disregards/${req.params.disregardId}`);
+    document.get()
+        .then((doc) => {
+            if (!doc.exists) {
+                return res.status(404).json({ error: 'Disregard not found' });
+            }
+            if (doc.data().userHandle !== req.user.handle) {
+                return res.status(403).json({ error: 'Unauthorized...' });
+            } else {
+                return document.delete();
+            }
+        })
+        .then(() => {
+            return res.json({ message: 'Disregard deleted successfully!' });
+          })
+          .catch((err) => {
+            console.error(err);
+            return res.status(500).json({ error: err.code });
+          });
 };
