@@ -8,3 +8,14 @@ module.exports = firebaseConfig = {
     messagingSenderId: "525135938773",
     appId: "1:525135938773:web:9d051859e28a8d62f24e5c"
 };
+
+
+//// storage rules edit ////
+// rules_version = '2';
+// service firebase.storage {
+//   match /b/{bucket}/o {
+//     match /{allPaths=**} {
+//       allow read, write: if request.auth != null;
+//     }
+//   }
+// }

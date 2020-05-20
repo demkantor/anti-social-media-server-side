@@ -21,7 +21,7 @@ app.post('/signup', signup);
 // logs in a user, validation for email and password fields before sending to firebase for more auth
 app.post('/login', login);
 // lets a user upload profile pic
-app.post('/user/image', uploadImage);
+app.post('/user/image', FBAuth, uploadImage);
 
 
 
