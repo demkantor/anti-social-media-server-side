@@ -10,6 +10,14 @@ let db = {
             commentCount: 2
         }
     ],
+    comments: [
+        {
+          userHandle: 'user',
+          disregardId: 'kdjsfgdksuufhgkdsufky',
+          body: 'nice one mate!',
+          createdAt: '2020-05-15T10:59:52.798Z'
+        }
+      ],
     users : [
         {
             userID: 'vrwgae789arg9ag9988a',

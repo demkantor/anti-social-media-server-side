@@ -2,16 +2,20 @@ const functions = require('firebase-functions');
 
 const app = require('express')();
 const FBAuth = require('./util/fbAuth');
-const { getAllDisregards, postNewDisregard } = require('./routes/disregards');
+const { getAllDisregards, postNewDisregard, getDisregard, commentOnDisregard } = require('./routes/disregards');
 const { signup, login, uploadImage, addUserDetails, getAuthenticatedUser } = require('./routes/users');
 
 
 // disregard routes //
 
 // gets all the posts (disregards) from db
-app.get('/disregard', getAllDisregards);
+app.get('/disregards', getAllDisregards);
 // route to add a new post... aka disregard
-app.post('/disregard', FBAuth, postNewDisregard);
+app.post('/disregards', FBAuth, postNewDisregard);
+// route to get a single post
+app.get('/disregards/:disregardId', getDisregard);
+// comment on a disregard post
+app.post('/disregards/:disregardId/comment', FBAuth, commentOnDisregard);
 
 
 // user routes //
