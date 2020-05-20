@@ -86,4 +86,7 @@ exports.login = (req, res) => {
         });
 };
 
-
+// allows user to upload a profile picture
+exports.uploadImage = (req, res) => {
+    
+}
