@@ -66,7 +66,7 @@ exports.api = functions.https.onRequest(app);
 
 
 //// create some user notification routes triggered upon user events ////
-
+// creates notificaton on new disrespect
 exports.createNotificationOnRespect = 
     functions
     .firestore
@@ -106,6 +106,7 @@ exports.deleteNotificationOnDisrespect =
             });
 });
 
+// notification on new comment
 exports.createNotificationOnComment =
     functions
     .firestore
@@ -131,4 +132,63 @@ exports.createNotificationOnComment =
         });
 });
 
+// notification on profile image change
+exports.onUserImageChange = 
+    functions
+    .firestore
+    .document(`/users/{userId}`)
+    .onUpdate((change) => {
+        if (change.before.data().imageUrl !== change.after.data().imageUrl) {
+            // console.log('image has changed');
+        let batch = db.batch();
+        return db.collection('disregards').where('userHandle', '==', change.before.data().handle).get()
+            .then((data) => {
+                data.forEach((doc) => {
+                  const disregard = db.doc(`/disregards/${doc.id}`);
+                  batch.update(disregard, { userImage: change.after.data().imageUrl });
+                });
+                return batch.commit();
+            });
+        } else {
+            return true;
+        }
+});
 
+// delete releated comments, respects and notification upon disregard delete
+exports.onDisregardDelete = 
+    functions
+    .firestore
+    .document('disregards/{disregardId}')
+    .onDelete((snapshot, context) => {
+        const disregardId = context.params.disregardId;
+        const batch = db.batch();
+        return db
+            .collection('comments')
+            .where('disregardId', '==', disregardId)
+            .get()
+            .then((data) => {
+                data.forEach((doc) => {
+                    batch.delete(db.doc(`/comments/${doc.id}`));
+                });
+                return db
+                .collection('respects')
+                .where('disregardId', '==', disregardId)
+                .get();
+        })
+        .then((data) => {
+            data.forEach((doc) => {
+                batch.delete(db.doc(`/respects/${doc.id}`));
+            });
+            return db
+            .collection('notifications')
+            .where('disregardId', '==', disregardId)
+            .get();
+        })
+        .then((data) => {
+            data.forEach((doc) => {
+                batch.delete(db.doc(`/notifications/${doc.id}`));
+            });
+            return batch.commit();
+        })
+        .catch((err) => console.error(err));
+});

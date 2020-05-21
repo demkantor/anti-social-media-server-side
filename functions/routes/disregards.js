@@ -12,12 +12,18 @@ exports.getAllDisregards = (req, res) => {
                 disregardId: doc.id,
                 body: doc.data().body,
                 userHandle: doc.data().userHandle,
-                createdAt: doc.data().createdAt
+                createdAt: doc.data().createdAt,
+                commentCount: doc.data().commentCount,
+                respectCount: doc.data().respectCount,
+                userImage: doc.data().userImage
             });
         });
         return res.json(disregards);
     })
-    .catch(err => console.error(err));
+    .catch((err) => {
+        console.log(err);
+        return res.status(500).json({ error: err.code });
+    });
 };
 
 
@@ -35,7 +41,6 @@ exports.postNewDisregard = (req, res) => {
         commentCount: 0
     };
     db.collection('disregards')
-        // .orderBy("createdAt", "desc")
         .add(newDisregard)
         .then((doc) => {
             const resDisregard = newDisregard;
@@ -85,7 +90,7 @@ exports.getDisregard = (req, res) => {
 // comment on a disregard post
 exports.commentOnDisregard = (req, res) => {
     if(req.body.body.trim() === '') 
-    return res.status(400).json({ error: 'Must not be empty!' });
+    return res.status(400).json({ comment: 'Must not be empty!' });
 
     const newComment = {
         body: req.body.body,
